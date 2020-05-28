@@ -1,0 +1,62 @@
+import React, { useReducer } from "react";
+
+// We use an object here as a Dictionary, where
+// property names represent the indeces, or keys,
+// into the collection of items.
+//
+const initialItems = [
+  { title: "Item #1", completed: true },
+  { title: "Item #2", completed: false }
+];
+
+// This reducer is built on the premise that it
+// begins with an object whose properties are
+// really keys into a collection, and finishes
+// by producing a similar object using the same
+// keys.
+//
+const itemsReducer = (items, change) => {
+  // DRYs out the code necessary for each change.type by
+  // automatically locating the correct item to change.
+  const mutation = (mutations) => {
+    return items.map(item => item !== change.item ? item : 
+      Object.assign(Object.assign({}, item), mutations))
+  }
+
+  switch (change.type) {
+    case "item.completion.changed":
+      return mutation({ completed: change.value })
+    case "item.completion.title":
+      return mutation({ title: change.value })
+    default:
+      return items;
+  }
+};
+
+export default function App() {
+  const [items, changeItems] = useReducer(itemsReducer, initialItems);
+
+  const onItemCompletionChanged = item => {
+    changeItems({
+      type: "item.completion.changed",
+      item: item,
+      value: !item.completed
+    });
+  };
+
+  return (
+    <div>
+      {items.map(item => (
+        <div>
+          <input
+            type="checkbox"
+            checked={item.completed}
+            onChange={event => onItemCompletionChanged(item)}
+          />
+          &nbsp;
+          <label>{item.title}</label>
+        </div>
+      ))}
+    </div>
+  );
+}
