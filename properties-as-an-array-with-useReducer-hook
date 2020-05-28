@@ -49,10 +49,10 @@ const itemsReducer = (items, change) => {
 };
 
 export default function App() {
-  const [items, updateItems] = useReducer(itemsReducer, initialItems);
+  const [items, changeItems] = useReducer(itemsReducer, initialItems);
 
   const onItemCompletionChanged = item => {
-    updateItems({ type: "item.completion.changed", item: item });
+    changeItems({ type: "item.completion.changed", item: item });
   };
 
   return (
