@@ -9,15 +9,23 @@ const initialItems = [
   { title: "Item #2", completed: false }
 ];
 
-// This reducer is built on the premise that it
-// begins with an object whose properties are
-// really keys into a collection, and finishes
-// by producing a similar object using the same
+// This reducer is built on the premise that it begins with
+// an object whose properties are really keys into a collection,
+// and finishes by producing a similar object using the same
 // keys.
 //
+// Expected Inputs:
+// ----------------
+// change.type
+// change.item, a direct reference to the item we will change
+// change.value, the new value of the property
+//
 const itemsReducer = (items, change) => {
-  // DRYs out the code necessary for each change.type by
-  // automatically locating the correct item to change.
+
+  // The following function DRYs out the code necessary
+  // for each change by automatically locating the correct
+  // item to change.
+  //
   const mutation = (mutations) => {
     return items.map(item => item !== change.item ? item : 
       Object.assign(Object.assign({}, item), mutations))
