@@ -1,0 +1,73 @@
+import React, { useReducer } from "react";
+
+// This is a simple helper class to allow callers to
+// treat an Object's properties as an array, so that
+// rendering code can take the same shape as if an
+// Array of objects were being used.
+//
+// Ex: PropertyArray(items).map(item => ...)
+//
+const PropertyArray = target => {
+  const keys = Object.keys(target);
+  return {
+    map: mapping => {
+      return keys.map(key => mapping(target[key], key));
+    }
+  };
+
+  // TODO: extend this to accommodate other Array methods
+};
+
+// We use an object here as a Dictionary, where
+// property names represent the indeces, or keys,
+// into the collection of items.
+//
+const initialItems = {
+  "1": { title: "Item #1", completed: true },
+  "2": { title: "Item #2", completed: false }
+};
+
+// This reducer is built on the premise that it
+// begins with an object whose properties are
+// really keys into a collection, and finishes
+// by producing a similar object using the same
+// keys.
+//
+const itemsReducer = (items, change) => {
+  switch (change.type) {
+    case 'item.completion.changed':
+      return PropertyArray(items).map(item =>
+        item === change.item ? { ...item, completed: !item.completed } : item
+      );
+    case 'item.title.changed':
+        return PropertyArray(items).map(item =>
+          item === change.item ? { ...item, title: change.title } : item
+        );  
+    default:
+      return items;
+  }
+};
+
+export default function App() {
+  const [items, updateItems] = useReducer(itemsReducer, initialItems);
+
+  const onItemCompletionChanged = item => {
+    updateItems({ type: "item.completion.changed", item: item });
+  };
+
+  return (
+    <div>
+      {PropertyArray(items).map(item => (
+        <div>
+          <input
+            type="checkbox"
+            checked={item.completed}
+            onChange={event => onItemCompletionChanged(item)}
+          />
+          &nbsp;
+          <label>{item.title}</label>
+        </div>
+      ))}
+    </div>
+  );
+}
