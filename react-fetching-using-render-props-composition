@@ -12,11 +12,16 @@ export default function App() {
 // A non-UI functional component sipmly to fetch movie data.
 function MovieFetcher({ children }) {
   const [state, setState] = useState({ movies: [], fetching: true });
-  
+
   // Just a simple way to quickly try out each type of fetcher.
-  const fetcher = APIFetcher() // or DelayedFetch(5000,sampleMovies) or SampleFetcher(sampleMovies)
+  const fetcher = APIFetcher() // or DelayedFetch(5000,sampleMovies) or SimpleFetcher(sampleMovies)
+  
+  useEffect(() => {
+    fetchMovies()
+  },[])
 
   const fetchMovies = async () => {
+
     try {
       setState({ ...state, fecthing: true })
       fetcher.fetch("https://my-json-server.typicode.com/jack-carter/movies/movies").then(data => {
@@ -27,14 +32,11 @@ function MovieFetcher({ children }) {
     }
   }
 
-  useEffect(() => {
-      fetchMovies()
-  },[])
-
   // Let our parent decide how to render the list of movies.
   return children(state);
 }
 
+// This is the actual UI component to render our movies.
 function MovieList({ movies, fetching }) {
   // We'll have different renderings depending on our state
   const renderLoading = (movies) => <div>Loading ...</div>
@@ -43,6 +45,7 @@ function MovieList({ movies, fetching }) {
     return (
       <div>
         {movies.map(movie => (
+          // The 'key' of course is required by React
           <MovieListEntry key={movie.id} movie={movie} />
         ))}
       </div>
@@ -72,24 +75,10 @@ function MovieListEntry({ movie }) {
   )
 }
 
-// Here's a simple way to abstract the sort of fetch() we're doing.
+// Here's a simple way to abstract (e.g. wrap) the type of fetch() we're doing.
 function APIFetcher() {
   return { 
     fetch: (url) => fetch(url).then(res => res.json())
-  }
-}
-
-// Just some sample data to allow us to see how the rendering works.
-const sampleMovies = [
-  { "id": 1, "title": "Star Wars Episode IV: A New Hope", released: 1977 },
-  { "id": 2, "title": "Star Wars Episode V: The Empire Strikes Back", released: 1980 },
-  { "id": 3, "title": "Star Wars Episode VI: Retur of the Jedi", released: 1983 }
-]
-
-// Just a simple helper class to give us fetch() like operation on an array of data.
-function SampleFetcher(data) {
-  return { 
-    fetch: (url) => Promise.resolve(data)
   }
 }
 
@@ -101,5 +90,19 @@ function DelayedFetch(delay,data) {
     })
   }
 }
+
+// Just a simple helper class to give us fetch() like operation on an array of data.
+function SimpleFetcher(data) {
+  return { 
+    fetch: (url) => Promise.resolve(data)
+  }
+}
+
+// Just some sample data to allow us to see how the rendering works.
+const sampleMovies = [
+  { "id": 1, "title": "Star Wars Episode IV: A New Hope", released: 1977 },
+  { "id": 2, "title": "Star Wars Episode V: The Empire Strikes Back", released: 1980 },
+  { "id": 3, "title": "Star Wars Episode VI: Retur of the Jedi", released: 1983 }
+]
 
 
