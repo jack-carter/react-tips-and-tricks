@@ -1,42 +1,20 @@
 import React, { useState, useEffect } from "react";
 
-import "./styles.css";
-
-// Just some sample data to allow us to see how the rendering works.
-const sampleMovies = [
-  { "id": 1, "title": "Star Wars Episode IV: A New Hope", released: 1977 },
-  { "id": 2, "title": "Star Wars Episode V: The Empire Strikes Back", released: 1980 },
-  { "id": 3, "title": "Star Wars Episode VI: Retur of the Jedi", released: 1983 }
-]
-
-// Just a simple helper class to give us fetch() like operation.
-function SampleFetcher(data) {
-  return { 
-    fetch: (url) => Promise.resolve(data)
-  }
+// And, of course, the one App to rule them all.
+export default function App() {
+  return (
+    <div>
+      <MovieFetcher children={MovieList} />
+    </div>
+  );
 }
-
-// Similar to the above, only this one allows some delay
-function DelayedFetch(delay,data) {
-  return {
-    fetch: (url) => new Promise(resolve => {
-        setTimeout(resolve.bind(null,data),delay)
-    })
-  }
-}
-
-// Here's a simple way to abstract the sort of fetch() we're doing.
-function APIFetcher() {
-  return { 
-    fetch: (url) => fetch(url).then(res => res.json())
-  }
-}
-
-const fetcher = APIFetcher() // or DelayedFetch(5000,sampleMovies) or SampleFetcher(sampleMovies)
 
 // A non-UI functional component sipmly to fetch movie data.
 function MovieFetcher({ children }) {
   const [state, setState] = useState({ movies: [], fetching: true });
+  
+  // Just a simple way to quickly try out each type of fetcher.
+  const fetcher = APIFetcher() // or DelayedFetch(5000,sampleMovies) or SampleFetcher(sampleMovies)
 
   const fetchMovies = async () => {
     try {
@@ -71,11 +49,6 @@ function MovieList({ movies, fetching }) {
     )
   };
 
-  // const renderMovies = Which
-  //   .when(fetching).use(renderLoading)
-  //   .when(movies && movies.length == 0).use(renderEmpty)
-  //   .otherwise(renderList) 
-
   // We'll determine which rendering method to use.
   const renderMovies = fetching === true ? renderLoading : 
     movies && movies.length == 0 ? renderEmpty :
@@ -99,11 +72,34 @@ function MovieListEntry({ movie }) {
   )
 }
 
-// And, of course, the one App to rule them all.
-export default function App() {
-  return (
-    <div>
-      <MovieFetcher children={MovieList} />
-    </div>
-  );
+// Here's a simple way to abstract the sort of fetch() we're doing.
+function APIFetcher() {
+  return { 
+    fetch: (url) => fetch(url).then(res => res.json())
+  }
 }
+
+// Just some sample data to allow us to see how the rendering works.
+const sampleMovies = [
+  { "id": 1, "title": "Star Wars Episode IV: A New Hope", released: 1977 },
+  { "id": 2, "title": "Star Wars Episode V: The Empire Strikes Back", released: 1980 },
+  { "id": 3, "title": "Star Wars Episode VI: Retur of the Jedi", released: 1983 }
+]
+
+// Just a simple helper class to give us fetch() like operation on an array of data.
+function SampleFetcher(data) {
+  return { 
+    fetch: (url) => Promise.resolve(data)
+  }
+}
+
+// Similar to the above, only this one allows some delay.
+function DelayedFetch(delay,data) {
+  return {
+    fetch: (url) => new Promise(resolve => {
+        setTimeout(resolve.bind(null,data),delay)
+    })
+  }
+}
+
+
