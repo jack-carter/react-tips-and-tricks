@@ -1,0 +1,109 @@
+import React, { useState, useEffect } from "react";
+
+import "./styles.css";
+
+// Just some sample data to allow us to see how the rendering works.
+const sampleMovies = [
+  { "id": 1, "title": "Star Wars Episode IV: A New Hope", released: 1977 },
+  { "id": 2, "title": "Star Wars Episode V: The Empire Strikes Back", released: 1980 },
+  { "id": 3, "title": "Star Wars Episode VI: Retur of the Jedi", released: 1983 }
+]
+
+// Just a simple helper class to give us fetch() like operation.
+function SampleFetcher(data) {
+  return { 
+    fetch: (url) => Promise.resolve(data)
+  }
+}
+
+// Similar to the above, only this one allows some delay
+function DelayedFetch(delay,data) {
+  return {
+    fetch: (url) => new Promise(resolve => {
+        setTimeout(resolve.bind(null,data),delay)
+    })
+  }
+}
+
+// Here's a simple way to abstract the sort of fetch() we're doing.
+function APIFetcher() {
+  return { 
+    fetch: (url) => fetch(url).then(res => res.json())
+  }
+}
+
+const fetcher = APIFetcher() // or DelayedFetch(5000,sampleMovies) or SampleFetcher(sampleMovies)
+
+// A non-UI functional component sipmly to fetch movie data.
+function MovieFetcher({ children }) {
+  const [state, setState] = useState({ movies: [], fetching: true });
+
+  const fetchMovies = async () => {
+    try {
+      setState({ ...state, fecthing: true })
+      fetcher.fetch("https://my-json-server.typicode.com/jack-carter/movies/movies").then(data => {
+        setState({ movies: data, fetching: false })
+      })
+    } catch (e) {
+      setState({ ...state, fetching: false })
+    }
+  }
+
+  useEffect(() => {
+      fetchMovies()
+  },[])
+
+  // Let our parent decide how to render the list of movies.
+  return children(state);
+}
+
+function MovieList({ movies, fetching }) {
+  // We'll have different renderings depending on our state
+  const renderLoading = (movies) => <div>Loading ...</div>
+  const renderEmpty = (movies) => <div>No movies</div>
+  const renderList = (movies) => {
+    return (
+      <div>
+        {movies.map(movie => (
+          <MovieListEntry key={movie.id} movie={movie} />
+        ))}
+      </div>
+    )
+  };
+
+  // const renderMovies = Which
+  //   .when(fetching).use(renderLoading)
+  //   .when(movies && movies.length == 0).use(renderEmpty)
+  //   .otherwise(renderList) 
+
+  // We'll determine which rendering method to use.
+  const renderMovies = fetching === true ? renderLoading : 
+    movies && movies.length == 0 ? renderEmpty :
+      renderList;
+
+  // Render ourselves according our present state.
+  return (
+    <div>
+      <div>Movie List</div>
+      {renderMovies(movies)}
+    </div>
+  );
+}
+
+// Define how we will render each movie in the list.
+function MovieListEntry({ movie }) {
+  return (
+    <div>
+      {movie.released} {movie.title}
+    </div>
+  )
+}
+
+// And, of course, the one App to rule them all.
+export default function App() {
+  return (
+    <div>
+      <MovieFetcher children={MovieList} />
+    </div>
+  );
+}
