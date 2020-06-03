@@ -1,0 +1,114 @@
+import React, { createContext, useReducer } from "react";
+
+// BEGIN CounterProvider
+
+const CounterContext = createContext();
+
+// Initial State
+const initialState = { count: 0 };
+
+// Defined Ations
+const INCREMENT = "increment";
+const DECREMENT = "decrement";
+
+// State Reducer
+const reducer = (state = initialState, action) => {
+  switch (action.type) {
+    case INCREMENT:
+      return { count: state.count + 1 };
+    case DECREMENT:
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+};
+
+// Consumer Mappings
+
+const defaultStateMapping = {}
+
+const defaultActions = dispatch => {
+  return {
+    increment: () => dispatch({ type: INCREMENT }),
+    decrement: () => dispatch({ type: DECREMENT })
+  }
+}
+
+// Provider Component
+
+const CounterProvider = {
+  context: CounterContext,
+  useReducer: () => useReducer(reducer, initialState)
+}
+
+// END CounterProvider
+
+// BEG StateProvider & Context HOCs
+
+const withContext = (context, stateMapper, actionMapper) => Component => props => (
+  <context.Consumer>
+    {({ state, dispatch }) => {
+      const remappedState = stateMapper ? stateMapper(state) : defaultStateMapping;
+      const remappedActions = actionMapper ? actionMapper(dispatch) : defaultActions(dispatch);
+      const combinedStates = { ...props, ...remappedState, ...remappedActions };
+      return <Component {...combinedStates}>{props.children}</Component>;
+    }}
+  </context.Consumer>
+);
+
+const asConsumer = (provider, stateMapper, actionMapper) => {
+  return withContext(provider.context,stateMapper,actionMapper)
+}
+
+const withProvider = provider => Component => props => {
+  const [state, dispatch] = provider.useReducer()
+  return (
+    <provider.context.Provider value={{ state, dispatch }}>
+      <CounterUI />
+    </provider.context.Provider>
+  );
+}
+
+// END StateProvider & Context HOCs
+
+// BEG Simple Stateless UI Components
+
+const Display = ({ count }) => {
+  return <div>Count: {count}</div>;
+};
+
+const IncrementButton = ({ increment }) => {
+  return <button onClick={increment}>+1</button>;
+};
+
+const DecrementButton = ({ decrement }) => {
+  return <button onClick={decrement}>-1</button>;
+};
+
+// END Simple Stateless UI Components
+
+// BEG UI Components (wrapped)
+
+const sliceOfState = state => ({
+  count: state.count
+});
+
+const CounterDisplay = asConsumer(CounterProvider,sliceOfState)(Display);
+const CounterIncrementButton = asConsumer(CounterProvider)(IncrementButton);
+const CounterDecrementButton = asConsumer(CounterProvider)(DecrementButton);
+
+// END UI Components (wrapped)
+
+// BEG UI Contsiner Component
+
+const CounterUI = () => (
+  <div>
+    <CounterDisplay />
+    <CounterIncrementButton />
+    <CounterDecrementButton />
+  </div>
+)
+
+export default withProvider(CounterProvider)(CounterUI)
+
+// END UI Container Component
