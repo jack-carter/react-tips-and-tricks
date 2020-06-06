@@ -1,0 +1,153 @@
+import React, { useReducer, useState } from "react";
+
+// Reducer Actions
+const ADD = "add.item"
+const DELETE = "delete.item.ref"
+const DELETE_ID = "delete.item.id"
+const DELETE_KEY = "delete.item.key"
+const DELETE_INDEX = "delete.item.index"
+const CHANGE = "change.item.by.ref"
+const CHANGE_ID = "change.item.id"
+const CHANGE_KEY = "change.item.key"
+const CHANGE_INDEX = "change.item.index"
+const REPLACE = "replace.state"
+
+// These ar simply convenient mappings to the proper dispatch() calls.
+const listDispatcher = (dispatch) => {
+  return {
+    add: (item) => dispatch({ type: ADD, item: item }),
+    delete: (item) => dispatch({ type: DELETE, item: item }),
+    deleteID: (id) => dispatch({ type: DELETE_ID, id: id }),
+    deleteKey: (key) => dispatch({ type: DELETE_KEY, key: key }),
+    deleteIndex: (index) => dispatch({ type: DELETE_INDEX, index: index }),
+    change: (item,changes) => dispatch({ type: CHANGE, item: item, changes: changes }),
+    changeID: (id,changes) => dispatch({ type: CHANGE_ID, id: id, changes: changes }),
+    changeKey: (key,changes) => dispatch({ type: CHANGE_KEY, key: key, changes: changes }),
+    changeIndex: (index,changes) => dispatch({ type: CHANGE_INDEX, index: index, changes: changes }),
+    replace: (state) => dispatch({ type: REPLACE, state: state })
+  }
+}
+
+// 'state' is an Array of items.
+const reducer = (state,action) => {
+  switch (action.type) {
+    // dispatch({ type: ADD, item: item })
+    case ADD:
+      const newitem = {...action.item, key: new Date().getTime().toString()}
+      console.log("Adding ... " + JSON.stringify(newitem))
+      return [...state, newitem]
+    // dispatch({ type: DELETE, item: item })
+    case DELETE:
+        console.log("Deleting ... " + JSON.stringify(action.item))
+        return state.filter(item => item !== action.item)
+    // dispatch({ type: DELETE_ID, id: id })
+    case DELETE_ID:
+        console.log("Deleting ID ... " + JSON.stringify(action.id))
+      return state.filter(item => item.id !== action.id)
+    // dispatch({ type: DELETE_KEY, key: key })
+    case DELETE_KEY:
+      console.log("Deleting KEY ... " + JSON.stringify(action.key))
+      return state.filter(item => item.key !== action.key)
+    // dispatch({ type: DELETE_INDEX, index: index })
+    case DELETE_INDEX:
+      console.log("Deleting INDEX ... " + JSON.stringify(action.index))
+      return state.filter((item,index) => index !== action.index)
+    // dipsatch({ type: CHANGE, item: item, changes: {...} })
+    case CHANGE:
+      console.log("Changing ... " + JSON.stringify(action.item))
+      return state.map(item => item !== action.item ? item : {...item, ...action.changes})
+    // dispatch({ type: CHANGE_ID, id: id, changes: {...} })
+    case CHANGE_ID:
+      console.log("Changing ID ... " + JSON.stringify(action.id))
+      return state.map(item => item.id !== action.id ? item : {...item, ...action.changes})
+    // dispatch({ type: CHANGE_KEY, key: key, changes: {...} })
+    case CHANGE_KEY:
+      console.log("Changing KEY ... " + JSON.stringify(action.key))
+      return state.map(item => item.key !== action.key ? item : {...item, ...action.changes})
+    // dispatch({ type: CHANGE_INDEX, index: index, changes: {...} })
+    case CHANGE_INDEX:
+      console.log("Changing INDEX ... " + JSON.stringify(action.index))
+      return state.map((item,index) => index !== action.index ? item : {...item, ...action.changes})
+    // dispatch({ type: REPLACE, state: state })
+    case REPLACE:
+      return action.state
+    default:
+      return state
+  }
+}
+
+export default function App() {
+  const [state,dispatch] = useReducer(reducer, [])
+
+  const actions = { ...listDispatcher(dispatch),
+    select: (item) => {
+      console.log('Item selected ... ' + JSON.stringify(item))
+    }
+  }
+  
+  // We'll be housing Movies in our list.
+  return (
+    <div>
+      <EntryFrom add={actions.add} />
+      <hr />
+      <List items={state} layout={ItemLayout} actions={actions}>
+        <div>Add some items to your list</div>
+      </List>
+    </div>
+  );
+}
+
+const EntryFrom = ({ add }) => {
+  const [title,setTitle] = useState('')
+  const clearTitle = () => setTitle('')
+
+  // Action handlers
+  const onChange = (event) => {
+    setTitle(event.target.value)
+  }
+
+  const onClick = () => {
+    add({ title: title })
+    clearTitle()
+  }
+
+  return (
+    <div>
+      <label>Enter movie title</label>
+      <input type="text" value={title} onChange={onChange} />
+      <input type="button" value="Add" onClick={onClick} />
+    </div>
+  )
+}
+
+// Independent UI Component that manages rendering a list.
+const List = ({items, layout, actions, children}) => {
+  const isEmpty = (list) => !Array.isArray(list) || !list.length
+  const asProps = (layout) => (item) => layout({ item: item, actions: actions })
+  return (
+    <div>
+      {isEmpty(items) ? [children] : items.map(asProps(layout))}
+    </div>
+  )
+}
+
+// Independent UI Component that lays out each item.
+const ItemLayout = ({ item, actions }) => {
+  const onSelect = (event) => {
+    event.preventDefault()
+    actions.select(item)
+  }
+  const onDelete = (event) => {
+    event.preventDefault()
+    actions.delete(item)
+  }
+
+  return (
+    <div key={item.key} onClick={onSelect}>
+      <label>{item.title}</label>
+      &nbsp;
+      {actions && actions.delete && <a href="/" onClick={onDelete}>delete</a>}
+    </div>
+  )
+}
+
