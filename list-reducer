@@ -35,7 +35,7 @@ const listDispatcher = (dispatch) => {
 // In this case we've chosen to represent 'state' as an Array of items,
 // thus all actions will result in a new array of items.
 //
-const reducer = (state,action) => {
+const listReducer = (state,action) => {
   switch (action.type) {
   
     // dispatch({ type: ADD, item: item })
@@ -94,7 +94,7 @@ const reducer = (state,action) => {
 }
 
 export default function App() {
-  const [state,dispatch] = useReducer(reducer, [])
+  const [state,dispatch] = useReducer(listReducer, [])
   
   // We define our own function here to demonstrate
   // how we can add actions to any particular list
@@ -168,6 +168,11 @@ const ItemLayout = ({ item, actions }) => {
     delete: actions && actions.delete
   }
 
+  // Gives us a simple way to guard those functions which
+  // may not be availble.
+  //
+  const WHEN = (option,handler) => allow[option] ? handler : e => { /* do nothing */ }  
+
   // Standard steps to keep events from "bubbling" up,
   // which is needed here to keep the anchor tag from
   // automatically reloading the page, as that is it's
@@ -177,6 +182,10 @@ const ItemLayout = ({ item, actions }) => {
       e.preventDefault()
       e.stopPropagation()
       handler(e) 
+  }
+
+  const ONCE_IF_ALLOWED = (option,handler) => {
+    return HANDLE_ONCE(WHEN(option,handler))
   }
 
   // Click handlers
@@ -191,10 +200,10 @@ const ItemLayout = ({ item, actions }) => {
   }
 
   return (
-    <div key={item.key} onClick={HANDLE_ONCE(onSelect)}>
+    <div key={item.key} onClick={ONCE_IF_ALLOWED('select',onSelect)}>
       <label>{item.title}</label>
       &nbsp;
-      {allow.delete && <a href="/" onClick={HANDLE_ONCE(onDelete)}>delete</a>}
+      {allow.delete && <a href="/" onClick={ONCE_IF_ALLOWED('delete',onDelete)}>delete</a>}
     </div>
   )
 }
