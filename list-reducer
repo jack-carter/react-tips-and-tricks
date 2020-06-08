@@ -12,7 +12,7 @@ const CHANGE_KEY = "change.item.key"
 const CHANGE_INDEX = "change.item.index"
 const REPLACE = "replace.state"
 
-// These ar simply convenient mappings to the proper dispatch() calls.
+// These are simply convenient mappings to the proper dispatch() calls.
 const listDispatcher = (dispatch) => {
   return {
     add: (item) => dispatch({ type: ADD, item: item }),
@@ -102,11 +102,11 @@ const EntryFrom = ({ add }) => {
   const clearTitle = () => setTitle('')
 
   // Action handlers
-  const onChange = (event) => {
+  const onChangeTitle = (event) => {
     setTitle(event.target.value)
   }
 
-  const onClick = () => {
+  const onAddTitle = () => {
     add({ title: title })
     clearTitle()
   }
@@ -114,8 +114,8 @@ const EntryFrom = ({ add }) => {
   return (
     <div>
       <label>Enter movie title</label>
-      <input type="text" value={title} onChange={onChange} />
-      <input type="button" value="Add" onClick={onClick} />
+      <input type="text" value={title} onChange={onChangeTitle} />
+      <input type="button" value="Add" onClick={onAddTitle} />
     </div>
   )
 }
@@ -133,20 +133,40 @@ const List = ({items, layout, actions, children}) => {
 
 // Independent UI Component that lays out each item.
 const ItemLayout = ({ item, actions }) => {
-  const onSelect = (event) => {
-    event.preventDefault()
+
+  // This gives us control over what to display
+  // to the user as far as available actions.
+  const allow = {
+    select: actions && actions.select,
+    delete: actions && actions.delete
+  }
+
+  // Standard steps to keep events from "bubbling" up,
+  // which is needed here to keep the anchor tag from
+  // automatically reloading the page, as that is it's
+  // default behavior upon clicking.
+  const HANDLE_ONCE = (handler) => (e) => {
+      e.preventDefault()
+      e.stopPropagation()
+      handler(e) 
+  }
+
+  // Click handlers
+
+  const onSelect = (e) => {
+    console.log('onSelect()')
     actions.select(item)
   }
-  const onDelete = (event) => {
-    event.preventDefault()
+  const onDelete = (e) => {
+    console.log('onDelete()')
     actions.delete(item)
   }
 
   return (
-    <div key={item.key} onClick={onSelect}>
+    <div key={item.key} onClick={HANDLE_ONCE(onSelect)}>
       <label>{item.title}</label>
       &nbsp;
-      {actions && actions.delete && <a href="/" onClick={onDelete}>delete</a>}
+      {allow.delete && <a href="/" onClick={HANDLE_ONCE(onDelete)}>delete</a>}
     </div>
   )
 }
